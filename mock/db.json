@@ -1,59 +1,230 @@
 {
   "currentUser": {
-    "name": "Admin SAKAI",
+    "name": "Admin",
     "role": "SuperAdmin",
     "avatar": "https://i.pravatar.cc/150?img=11"
   },
+  
   "menuGroups": [
-    {
-      "groupName": "SECURITY & SYSTEM",
-      "menus": [
+  {
+    "groupName": "SECURITY & SYSTEM",
+    "menus": [
+      { "id": "m_users", "title": "User Accounts", "path": "/user-accounts", "icon": "UserIcon", "schemaPath": "/api/schema/users" },
+      { "id": "m_groups", "title": "User Groups", "path": "/user-groups", "icon": "LockIcon", "schemaPath": "/api/schema/groups" }
+    ]
+  },
+  {
+    "groupName": "EMPLOYEE MANAGEMENT",
+    "menus": [
+      { "id": "m_employee", "title": "Employee Management", "path": "/employee-management", "icon": "UsersIcon", "schemaPath": "/api/schema/employee" }
+    ]
+  },
+  {
+    "groupName": "ADMINISTRATION",
+    "menus": [
+      { "id": "m_admin", "title": "Administration", "path": "/administration", "icon": "SettingsIcon", "schemaPath": "/api/schema/admin" }
+    ]
+  },
+  {
+    "groupName": "TRANSACTIONS",
+    "menus": [
+      { "id": "m_orders", "title": "Orders", "path": "/orders", "icon": "CartIcon", "schemaPath": "/api/schema/order" },
+      { "id": "m_invoice", "title": "Invoice Management", "path": "/invoice-management", "icon": "DocumentIcon", "schemaPath": "/api/schema/invoice" }
+    ]
+  }
+  ,
+  {
+    "groupName": "MASTER DATA",
+    "menus": [
+      { "id": "m_prod_cat", "title": "Product Categories", "path": "/product-categories", "icon": "TagIcon", "schemaPath": "/api/schema/product-categories" },
+      { "id": "m_cust_cat", "title": "Customer Categories", "path": "/customer-categories", "icon": "UsersIcon", "schemaPath": "/api/schema/customer-categories" },
+      { "id": "m_cust_master", "title": "Customer Master", "path": "/customer-master", "icon": "UserIcon", "schemaPath": "/api/schema/customer-master" }
+    ]
+  }
+],
+
+  "schemas": {
+    "/api/schema/order": {
+      "moduleName": "ORDERS",
+      "actions": {
+        "canCreate": true,
+        "canEdit": true,
+        "canDelete": true
+      },
+      "fields": [
+        { "name": "orderNo", "label": "Order #", "type": "text", "isSearchable": true },
+        { "name": "orderDate", "label": "Date", "type": "date", "isSearchable": true },
+        { "name": "customerId", "label": "Customer", "type": "select", "dataSource": "/api/customers/dropdown", "isSearchable": true },
         {
-          "id": "m1",
-          "title": "User Accounts",
-          "path": "/user-accounts",
-          "icon": "UserIcon",
-          "tabs": [
-            { "id": "t1", "title": "Users", "isActive": true },
-            { "id": "t2", "title": "Groups", "isActive": false },
-            { "id": "t3", "title": "Custom Fields", "isActive": false },
-            { "id": "t4", "title": "Form Actions", "isActive": false }
-          ],
-          "tableConfig": {
-            "tableName": "USERS",
-            "actions": {
-              "canCreate": true,
-              "canEdit": true,
-              "canDelete": true
-            },
-            "fields": [
-              { "name": "username", "label": "Username", "type": "text", "isSearchable": true },
-              { "name": "userCode", "label": "User Code", "type": "text", "isSearchable": true },
-              { "name": "email", "label": "Email", "type": "email", "isSearchable": true },
-              { "name": "password", "label": "Password", "type": "password", "isSearchable": true },
-              { "name": "department", "label": "Department", "type": "text", "isSearchable": true },
-              { "name": "userGroups", "label": "User Groups", "type": "tags", "isSearchable": true }
+          "name": "lineItems",
+          "label": "Line Items",
+          "type": "sub_table",
+          "columns": [
+            { "name": "productId", "label": "Product", "type": "select", "dataSource": "/api/products/dropdown" },
+            { "name": "qty", "label": "Qty", "type": "number" },
+            { "name": "price", "label": "Price", "type": "number" },
+            { "name": "total", "label": "Total", "type": "number", "isReadonly": true }
+          ]
+        }
+      ],
+      "listConfig": {
+        "displayColumns": ["orderNo", "orderDate", "customerId"]
+      },
+      "formConfig": {
+        "layout": [
+          {
+            "type": "section",
+            "title": "MAIN DETAILS",
+            "fields": ["orderNo", "orderDate", "customerId"]
+          },
+          {
+            "type": "tabs",
+            "tabItems": [
+              { "title": "Line Items", "fields": ["lineItems"] },
+              { "title": "Attachments", "fields": [] },
+              { "title": "History", "fields": [] },
+              { "title": "Approvals", "fields": [] },
+              { "title": "Logistics", "fields": [] }
             ]
           }
-        },
-        {
-          "id": "m2",
-          "title": "User Groups",
-          "path": "/user-groups",
-          "icon": "LockIcon"
-        }
-      ]
+        ]
+      }
     },
-    {
-      "groupName": "EMPLOYEE MANAGEMENT",
-      "menus": [
-        {
-          "id": "m3",
-          "title": "Employee Management",
-          "path": "/employee-management",
-          "icon": "UsersIcon"
-        }
-      ]
+
+    "/api/schema/users": {
+      "moduleName": "USERS",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "username", "label": "Username", "type": "text", "isSearchable": true },
+        { "name": "userCode", "label": "User Code", "type": "text", "isSearchable": true },
+        { "name": "email", "label": "Email", "type": "email", "isSearchable": true },
+        { "name": "password", "label": "Password", "type": "password", "isSearchable": true },
+        { "name": "departmentId", "label": "Department", "type": "select", "dataSource": "/api/departments/dropdown", "isSearchable": true },
+        { "name": "groupIds", "label": "User Groups", "type": "multiselect", "dataSource": "/api/groups/dropdown", "isSearchable": true }
+      ],
+      "listConfig": {
+        "displayColumns": ["username", "userCode", "email", "password", "departmentId", "groupIds"]
+      },
+      "formConfig": {
+        "layout": [
+          {
+            "type": "flat",
+            "fields": ["username", "userCode", "email", "password", "departmentId", "groupIds"]
+          }
+        ]
+      }
+    },
+
+    "/api/schema/groups": {
+      "moduleName": "GROUPS",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "groupName", "label": "Group Name", "type": "text", "isSearchable": true },
+        { "name": "groupCode", "label": "Group Code", "type": "text", "isSearchable": true },
+        { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree" }
+      ],
+      "listConfig": {
+        "displayColumns": ["groupName", "groupCode"]
+      },
+      "formConfig": {
+        "layout": [
+          {
+            "type": "flat",
+            "fields": ["groupName", "groupCode", "permissions"]
+          }
+        ]
+      }
+    },
+
+    "/api/schema/product-categories": {
+      "moduleName": "PROD_CAT",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "categoryName", "label": "Category Name", "type": "text", "isSearchable": true },
+        { "name": "categoryCode", "label": "Category Code", "type": "text", "isSearchable": true },
+        { "name": "description", "label": "Description", "type": "text", "isSearchable": true }
+      ],
+      "listConfig": {
+        "displayColumns": ["categoryName", "categoryCode", "description"]
+      },
+      "formConfig": {
+        "layout": [
+          {
+            "type": "tabs",
+            "tabItems": [
+              {
+                "title": "General",
+                "fields": ["categoryName", "categoryCode", "description"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    "/api/schema/customer-master": {
+      "moduleName": "CUSTOMER",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "customerName", "label": "Customer Name", "type": "text", "isSearchable": true },
+        { "name": "categoryId", "label": "Category", "type": "select", "dataSource": "/api/customer-categories/dropdown", "isSearchable": true }
+      ],
+      "listConfig": {
+        "displayColumns": ["customerName", "categoryId"]
+      },
+      "formConfig": {
+        "layout": [
+          {
+            "type": "tabs",
+            "tabItems": [
+              { "title": "General Data", "fields": ["customerName", "categoryId"] },
+              { "title": "Contacts", "fields": [] },
+              { "title": "Sales & Purchase", "fields": [] },
+              { "title": "Internal Notes", "fields": [] }
+            ]
+          }
+        ]
+      }
+    },
+
+    "/api/schema/employee": {
+      "moduleName": "EMPLOYEE MANAGEMENT",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "dummyField", "label": "employee's label", "type": "text", "isSearchable": false }
+      ],
+      "listConfig": { "displayColumns": ["dummyField"] },
+      "formConfig": { "layout": [] }
+    },
+
+    "/api/schema/admin": {
+      "moduleName": "ADMINISTRATION",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "dummyField", "label": "aa", "type": "text", "isSearchable": false }
+      ],
+      "listConfig": { "displayColumns": ["dummyField"] },
+      "formConfig": { "layout": [] }
+    },
+
+    "/api/schema/invoice": {
+      "moduleName": "INVOICE MANAGEMENT",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "dummyField", "label": "aa", "type": "text", "isSearchable": false }
+      ],
+      "listConfig": { "displayColumns": ["dummyField"] },
+      "formConfig": { "layout": [] }
+    },
+
+    "/api/schema/customer-categories": {
+      "moduleName": "CUSTOMER CATEGORIES",
+      "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
+      "fields": [
+        { "name": "dummyField", "label": "aaa", "type": "text", "isSearchable": false }
+      ],
+      "listConfig": { "displayColumns": ["dummyField"] },
+      "formConfig": { "layout": [] }
     }
-  ]
+  }
 }
