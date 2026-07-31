@@ -25,6 +25,7 @@ export default function LoginPage() {
       if (response.ok) {
         alert('Đăng nhập thành công!');
         localStorage.setItem('accessToken', data.token);
+        console.log(data.token);
         router.push('/');
       } else {
         setError(data.message || 'Tên người dùng hoặc mật khẩu không chính xác!');

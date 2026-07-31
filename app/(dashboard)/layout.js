@@ -16,8 +16,8 @@ export default function DashboardLayout({ children }) {
         <div className="h-[60px] flex items-center px-6 border-b border-gray-200">
           <div className="flex items-center gap-2 text-[#00b074] font-bold text-xl tracking-wider">
             {}
-            <div className="w-8 h-8 rounded-full border-2 border-[#00b074] flex items-center justify-center">S</div>
-            SAKAI
+            <div className="w-8 h-8 rounded-full border-2 border-[#00b074] flex items-center justify-center">H</div>
+            HEHE
           </div>
         </div>
 
@@ -69,7 +69,6 @@ export default function DashboardLayout({ children }) {
           </div>
           
           <div className="flex items-center gap-5 text-gray-500">
-            {/* Các icon tiện ích bên phải */}
             <div className="w-5 h-5 rounded-full border border-gray-400"></div>
             <div className="w-5 h-5 rounded border border-gray-400"></div>
             <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
