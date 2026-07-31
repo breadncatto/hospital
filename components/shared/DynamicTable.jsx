@@ -1,53 +1,59 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import DynamicForm from './DynamicForm';
+import { dynamicApi } from '../../api/api';
 
 export default function DynamicTable({ schema }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQueries, setSearchQueries] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [tableData, setTableData] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const { moduleName, actions, fields, listConfig, pageTabs } = schema || {};
+
+  useEffect(() => {
+    if (!schema) return;
+    const getMockData = () => {
+      switch (moduleName) {
+        case 'USERS':
+          return [
+            { id: 1, username: 'admin', userCode: 'admin', email: 'admin@gmail.com', password: '1', departmentId: '1', groupIds: 'USER, ADMIN' },
+            { id: 2, username: 'user', userCode: 'user', email: 'user@gmail.com', password: '1', departmentId: '1', groupIds: 'USER' },
+            { id: 3, username: 'user01', userCode: 'user01', email: 'user01@gmail.com', password: '1', departmentId: '', groupIds: 'USER, ADMIN' },
+          ];
+        case 'CUSTOM FIELDS':
+          return [
+            { id: 1, label: 'Username', fieldKey: 'username' },
+            { id: 2, label: 'User Code', fieldKey: 'user_code' },
+            { id: 3, label: 'Email', fieldKey: 'email' },
+            { id: 4, label: 'Password', fieldKey: 'password' },
+          ];
+        case 'FORM ACTIONS':
+          return [
+            { id: 1, actionName: 'Save', actionCode: 'USER_SAVE' },
+            { id: 2, actionName: 'Update', actionCode: 'USER_UPDATE' },
+            { id: 3, actionName: 'Delete', actionCode: 'USER_DELETE' },
+          ];
+        default:
+          return [
+            { id: 1, groupName: 'USER', groupCode: 'USER' },
+            { id: 2, groupName: 'ADMIN', groupCode: 'ADMIN' },
+          ];
+      }
+    };
+    setTableData(getMockData());
+  }, [moduleName, schema]);
 
   if (!schema) return <div>Không tìm thấy cấu hình trang!</div>;
-
-  const { moduleName, actions, fields, listConfig, pageTabs } = schema;
 
   const displayFields = fields.filter(field => 
     listConfig.displayColumns.includes(field.name)
   );
-  const getMockData = () => {
-    switch (moduleName) {
-      case 'USERS':
-        return [
-          { id: 1, username: 'admin', userCode: 'admin', email: 'admin@gmail.com', password: '1', departmentId: '1', groupIds: 'USER, ADMIN' },
-          { id: 2, username: 'user', userCode: 'user', email: 'user@gmail.com', password: '1', departmentId: '1', groupIds: 'USER' },
-          { id: 3, username: 'user01', userCode: 'user01', email: 'user01@gmail.com', password: '1', departmentId: '', groupIds: 'USER, ADMIN' },
-        ];
-      case 'CUSTOM FIELDS':
-        return [
-          { id: 1, label: 'Username', fieldKey: 'username' },
-          { id: 2, label: 'User Code', fieldKey: 'user_code' },
-          { id: 3, label: 'Email', fieldKey: 'email' },
-          { id: 4, label: 'Password', fieldKey: 'password' },
-        ];
-      case 'FORM ACTIONS':
-        return [
-          { id: 1, actionName: 'Save', actionCode: 'USER_SAVE' },
-          { id: 2, actionName: 'Update', actionCode: 'USER_UPDATE' },
-          { id: 3, actionName: 'Delete', actionCode: 'USER_DELETE' },
-        ];
-      default:
-        return [
-          { id: 1, groupName: 'USER', groupCode: 'USER' },
-          { id: 2, groupName: 'ADMIN', groupCode: 'ADMIN' },
-        ];
-    }
-  };
 
-  const mockTableData = getMockData();
   const processedData = useMemo(() => {
-    let data = [...mockTableData];
+    let data = [...tableData]; 
     Object.keys(searchQueries).forEach(key => {
       const query = searchQueries[key]?.toLowerCase();
       if (query) {
@@ -69,7 +75,7 @@ export default function DynamicTable({ schema }) {
     }
 
     return data;
-  }, [mockTableData, searchQueries, sortConfig]); 
+  }, [tableData, searchQueries, sortConfig]); 
 
   const handleSearchChange = (fieldName, value) => {
     setSearchQueries(prev => ({
@@ -85,6 +91,45 @@ export default function DynamicTable({ schema }) {
       }
       return { key: fieldName, direction: 'asc' };
     });
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa dữ liệu này không?')) {
+      try {
+        await dynamicApi.delete(moduleName, id);
+        setTableData(prev => prev.filter(row => row.id !== id));
+        alert('Xóa thành công!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+  };
+
+  const handleSave = async (formData) => {
+    try {
+      if (selectedRow) {
+        const updatedData = await dynamicApi.update(moduleName, selectedRow.id, formData);
+        setTableData(prev => prev.map(row => row.id === selectedRow.id ? updatedData : row));
+        alert('Cập nhật thành công!');
+      } else {
+        const newData = await dynamicApi.create(moduleName, formData);
+        setTableData(prev => [...prev, newData]);
+        alert('Thêm mới thành công!');
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleOpenCreate = () => {
+    setSelectedRow(null); 
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (row) => {
+    setSelectedRow(row); 
+    setIsModalOpen(true);
   };
 
   return (
@@ -118,7 +163,7 @@ export default function DynamicTable({ schema }) {
           </h2>
           {actions?.canCreate && (
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleOpenCreate}
               className="bg-[#00b074] hover:bg-[#009662] text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors"
             >
               <span>+</span> New Entry
@@ -133,19 +178,35 @@ export default function DynamicTable({ schema }) {
               <tr className="border-b border-gray-200">
                 {displayFields.map((field) => (
                   <th 
-                    key={field.name} 
-                    className="pb-3 font-semibold text-gray-700 whitespace-nowrap pr-4 cursor-pointer hover:text-[#00b074] select-none"
-                    onClick={() => handleSort(field.name)}
+                  key={field.name}
+                  className="pb-3 font-semibold text-gray-700 whitespace-nowrap pr-4 cursor-pointer hover:text-[#00b074] select-none"
+                  onClick={() => handleSort(field.name)}
                   >
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {field.label}
-                      <span className="flex flex-col text-[10px] leading-none opacity-50">
-                        <span className={sortConfig.key === field.name && sortConfig.direction === 'asc' ? 'text-[#00b074] font-bold' : ''}>▲</span>
-                        <span className={sortConfig.key === field.name && sortConfig.direction === 'desc' ? 'text-[#00b074] font-bold' : ''}>▼</span>
-                      </span>
-                    </div>
-                  </th>
-                ))}
+                      <span className="flex items-center">
+                        {sortConfig.key === field.name ? (
+                          sortConfig.direction === 'asc' ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00b074]">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                            </svg>
+                            ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00b074]">
+                              <line x1="12" y1="19" x2="12" y2="5"></line>
+                              <polyline points="5 12 12 5 19 12"></polyline>
+                              </svg>
+                              )
+                            ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 opacity-50">
+                              <line x1="12" y1="5" x2="12" y2="19"></line>
+                              <polyline points="19 12 12 19 5 12"></polyline>
+                              </svg>
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                    ))}
                 <th className="pb-3 font-semibold text-gray-700 text-center w-24">Actions</th>
               </tr>
               <tr className="border-b border-gray-200">
@@ -162,7 +223,7 @@ export default function DynamicTable({ schema }) {
                         />
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
                              className={`cursor-pointer ${searchQueries[field.name] ? 'text-[#00b074]' : 'text-gray-400 hover:text-gray-600'}`}
-                             onClick={() => handleSearchChange(field.name, '')} // Bấm vào phễu để xóa text tìm kiếm
+                             onClick={() => handleSearchChange(field.name, '')}
                         >
                           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                         </svg>
@@ -196,10 +257,20 @@ export default function DynamicTable({ schema }) {
                     <td className="py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         {actions?.canEdit && (
-                          <button className="w-7 h-7 rounded-full border border-green-400 text-green-500 flex items-center justify-center hover:bg-green-50 transition-colors">✎</button>
+                          <button 
+                            onClick={() => handleOpenEdit(row)} 
+                            className="w-7 h-7 rounded-full border border-green-400 text-green-500 flex items-center justify-center hover:bg-green-50 transition-colors"
+                          >
+                            ✎
+                          </button>
                         )}
                         {actions?.canDelete && (
-                          <button className="w-7 h-7 rounded-full border border-red-400 text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors">🗑</button>
+                          <button 
+                            onClick={() => handleDelete(row.id)} 
+                            className="w-7 h-7 rounded-full border border-red-400 text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors"
+                          >
+                            🗑
+                          </button>
                         )}
                       </div>
                     </td>
@@ -218,7 +289,12 @@ export default function DynamicTable({ schema }) {
       </div>
 
       {isModalOpen && (
-        <DynamicForm schema={schema} onClose={() => setIsModalOpen(false)} />
+        <DynamicForm 
+          schema={schema} 
+          initialData={selectedRow} 
+          onClose={() => setIsModalOpen(false)} 
+          onSave={handleSave} 
+        />
       )}
     </div>
   );

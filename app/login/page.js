@@ -9,7 +9,6 @@ const cuprum = Cuprum({ subsets: ['latin'], weight: ['400', '700'] });
 
 export default function LoginPage() {
   const router = useRouter();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +25,7 @@ export default function LoginPage() {
         alert('Đăng nhập thành công!');
         localStorage.setItem('accessToken', data.token);
         console.log(data.token);
-        router.push('/');
+        router.push('/user-accounts');
       } else {
         setError(data.message || 'Tên người dùng hoặc mật khẩu không chính xác!');
       }

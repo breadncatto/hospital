@@ -2,15 +2,27 @@
 
 import { useState } from 'react';
 
-export default function DynamicForm({ schema, onClose }) {
+export default function DynamicForm({ schema, initialData, onClose, onSave }) {
+  const [formData, setFormData] = useState(initialData || {});
   const { moduleName, fields, formConfig } = schema;
   const getFieldDef = (fieldName) => fields.find((f) => f.name === fieldName);
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  const handleSubmit = () => {
+    onSave(formData);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white w-full max-w-4xl rounded-lg shadow-xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800 capitalize">{moduleName}</h2>
+          <h2 className="text-xl font-bold text-gray-800 capitalize">
+            {initialData ? `Chỉnh sửa ${moduleName}` : `Thêm mới ${moduleName}`}
+          </h2>
           <button 
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
@@ -38,14 +50,18 @@ export default function DynamicForm({ schema, onClose }) {
                         {(field.type === 'text' || field.type === 'email') && (
                           <input 
                             type={field.type} 
-                            className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors"
+                            value={formData[field.name] || ''}
+                            onChange={(e) => handleChange(field.name, e.target.value)}
+                            className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors text-gray-500 font-medium"
                           />
                         )}
                         {field.type === 'password' && (
                           <div className="relative">
                             <input 
                               type="password" 
-                              className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors pr-10"
+                              value={formData[field.name] || ''}
+                              onChange={(e) => handleChange(field.name, e.target.value)}
+                              className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors pr-10 text-gray-500 font-medium"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-400 hover:text-gray-600">
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -57,8 +73,14 @@ export default function DynamicForm({ schema, onClose }) {
                         )}
                         {(field.type === 'select' || field.type === 'multiselect') && (
                           <div className="relative">
-                            <select className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors appearance-none bg-white text-gray-500">
-                              <option value="">Select...</option>
+                            <select 
+                              value={formData[field.name] || ''}
+                              onChange={(e) => handleChange(field.name, e.target.value)}
+                              className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors appearance-none bg-white text-gray-500 font-medium"
+                            >
+                              <option value="" className="text-gray-500 font-normal">Select...</option>
+                              <option value="1">Option 1 (Demo)</option>
+                              <option value="2">Option 2 (Demo)</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -68,7 +90,7 @@ export default function DynamicForm({ schema, onClose }) {
                           </div>
                         )}
                         {field.type === 'tree_checkbox' && (
-                          <div className="w-full border border-gray-200 rounded p-5 bg-white max-h-[300px] overflow-y-auto shadow-inner">
+                          <div className="w-full border border-gray-200 rounded p-5 bg-white max-h-[300px] overflow-y-auto shadow-inner text-gray-500 font-medium">
                              <PermissionsTree />
                           </div>
                         )}
@@ -88,7 +110,10 @@ export default function DynamicForm({ schema, onClose }) {
           >
             Cancel
           </button>
-          <button className="px-6 py-2 text-sm font-medium text-white bg-[#00b074] hover:bg-[#009662] rounded shadow-sm transition-colors">
+          <button 
+            onClick={handleSubmit}
+            className="px-6 py-2 text-sm font-medium text-white bg-[#00b074] hover:bg-[#009662] rounded shadow-sm transition-colors"
+          >
             Save Changes
           </button>
         </div>
