@@ -92,7 +92,8 @@
     },
 
     "/api/schema/users": {
-      "moduleName": "USERS",
+      "moduleName": "USER",
+      "primaryKey": "user_code",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": true },
@@ -102,28 +103,28 @@
       ],
       "fields": [
         { "name": "username", "label": "Username", "type": "text", "isSearchable": true },
-        { "name": "userCode", "label": "User Code", "type": "text", "isSearchable": true },
+        { "name": "user_code", "label": "User Code", "type": "text", "isSearchable": true },
         { "name": "email", "label": "Email", "type": "email", "isSearchable": true },
         { "name": "password", "label": "Password", "type": "password", "isSearchable": true },
-        { "name": "departmentId", "label": "Department", "type": "select", "isSearchable": true },
-        { "name": "groupIds", "label": "User Groups", "type": "multiselect", "isSearchable": true },
+        { "name": "department", "label": "Department", "type": "select", "isSearchable": true },
+        { "name": "group_ids", "label": "User Groups", "type": "multiselect", "isSearchable": true },
         { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["username", "userCode", "email", "password", "departmentId", "groupIds"]
+        "displayColumns": ["username", "user_code", "email", "password", "department", "group_ids"]
       },
       "formConfig": {
         "layout": [
           {
             "type": "flat",
-            "fields": ["username", "userCode", "email", "password", "departmentId", "groupIds", "permissions"]
+            "fields": ["username", "user_code", "email", "password", "department", "group_ids", "permissions"]
           }
         ]
       }
     },
 
     "/api/schema/custom-fields": {
-      "moduleName": "CUSTOM FIELDS",
+      "moduleName": "CUSTOMFIELD",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": false },
@@ -148,7 +149,7 @@
     },
 
     "/api/schema/form-actions": {
-      "moduleName": "FORM ACTIONS",
+      "moduleName": "ACTION",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": false },
@@ -157,25 +158,25 @@
         { "title": "Form Actions", "path": "/form-actions", "isActive": true }
       ],
       "fields": [
-        { "name": "actionName", "label": "Action Name", "type": "text", "isSearchable": true },
-        { "name": "actionCode", "label": "Action Code", "type": "text", "isSearchable": true }
+        { "name": "action_name", "label": "Action Name", "type": "text", "isSearchable": true },
+        { "name": "action_code", "label": "Action Code", "type": "text", "isSearchable": true }
       ],
       "listConfig": {
-        "displayColumns": ["actionName", "actionCode"]
+        "displayColumns": ["action_name", "action_code"]
       },
       "formConfig": { 
         "layout": [
           {
             "type": "flat",
-            "fields": ["actionName", "actionCode"]
+            "fields": ["action_name", "action_code"]
           }
         ] }
     },
 
     "/api/schema/groups": {
-      "moduleName": "GROUPS",
+      "moduleName": "GROUP",
+      "primaryKey": "group_code",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
-      
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": false },
         { "title": "Groups", "path": "/user-groups", "isActive": true },
@@ -183,18 +184,18 @@
         { "title": "Form Actions", "path": "/form-actions", "isActive": false }
       ],
       "fields": [
-        { "name": "groupName", "label": "Group Name", "type": "text", "isSearchable": true },
-        { "name": "groupCode", "label": "Group Code", "type": "text", "isSearchable": true },
+        { "name": "group_name", "label": "Group Name", "type": "text", "isSearchable": true },
+        { "name": "group_code", "label": "Group Code", "type": "text", "isSearchable": true },
         { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": true }
       ],
       "listConfig": {
-        "displayColumns": ["groupName", "groupCode"]
+        "displayColumns": ["group_name", "group_code"]
       },
       "formConfig": {
         "layout": [
           {
             "type": "flat",
-            "fields": ["groupName", "groupCode", "permissions"]
+            "fields": ["group_name", "group_code"]
           }
         ]
       }

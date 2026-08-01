@@ -4,36 +4,47 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { systemApi } from '../api/api';
-
-// Bê bộ từ điển Icon từ DynamicForm sang hoặc tách ra 1 file dùng chung (ví dụ: utils/icons.js)
-const Icons = {
-  shield: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
-  users: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
-  // ... thêm các icon khác nếu cần
-};
+import { Icons } from '../utils/icon'; 
 
 export default function Sidebar() {
   const pathname = usePathname(); 
   const [menuItems, setMenuItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchMenu = async () => {
-      try {
-        const response = await systemApi.getMenus();
-        setMenuItems(response.data || []);
-      } catch (error) {
-        console.error("Lỗi lấy menu:", error);
-      } finally {
+      setIsLoading(true);
+      setError(null);
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setError('User ID not found. Please login again.');
         setIsLoading(false);
+        return;
       }
+
+      const response = await systemApi.getMenus(userId);
+      if (response.error) {
+        setError(response.error);
+      } else {
+        setMenuItems(response.data?.data || response.data || []);
+      }
+      setIsLoading(false);
     };
 
     fetchMenu();
   }, []);
 
   if (isLoading) {
-    return <div className="p-4 text-gray-500">Đang tải menu...</div>;
+    return <div className="p-5 text-gray-400">Loading menu...</div>;
+  }
+
+  if (error) {
+    return <div className="p-5 text-red-500 font-medium">{error}</div>;
+  }
+
+  if (menuItems.length === 0) {
+    return <div className="p-5 text-gray-400">No menu available</div>;
   }
 
   return (
@@ -44,22 +55,21 @@ export default function Sidebar() {
       
       <nav className="flex-1 py-4 flex flex-col gap-2 px-3">
         {menuItems.map((item) => {
-          // Xử lý active state: Nếu pathname chứa đường dẫn của menu thì tô sáng
-          const isActive = pathname === item.to || pathname.startsWith(item.to + '/');
+          const routePath = item.to || '#';
+          const isActive = pathname === routePath || pathname.startsWith(routePath + '/');
 
           return (
             <Link 
               key={item.id} 
-              href={item.to || '#'} // Nếu BE trả về "to": "", tạm thời để '#' tránh lỗi
+              href={routePath} 
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-[#00b074] text-white' 
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              {/* Hiển thị Icon từ dictionary */}
-              <span className="flex items-center justify-center">
-                {Icons[item.icon] || <span className="w-5 h-5 bg-gray-700 rounded-full" />}
+              <span className="flex items-center justify-center w-5 h-5">
+                {Icons[item.icon] || <span className="w-2 h-2 bg-gray-600 rounded-full" />}
               </span>
               
               <span className="text-sm font-medium tracking-wide">

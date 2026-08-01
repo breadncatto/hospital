@@ -15,6 +15,17 @@ export default function DynamicTable({ schema }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [confirmBox, setConfirmBox] = useState({ isOpen: false, title: '', message: '', action: null });
+  const [toast, setToast] = useState({ isOpen: false, message: '', type: 'success' });
+  const endpoint = schema.endpoint || moduleName.toLowerCase().replace(' ', '-'); 
+
+
+  const showToast = (message, type = 'success') => {
+    setToast({ isOpen: true, message, type });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, isOpen: false }));
+    }, 3000);
+  };
 
   useEffect(() => {
     if (!schema) return;
@@ -23,7 +34,6 @@ export default function DynamicTable({ schema }) {
       setIsLoading(true);
       setError(null);
       try {
-        const endpoint = schema.endpoint || moduleName.toLowerCase().replace(' ', '-'); 
         console.log(`Đang gọi API lấy danh sách: /api/${endpoint}`);
         const responseData = await dynamicApi.getAll(endpoint);
         const actualData = responseData.data;
@@ -39,36 +49,6 @@ export default function DynamicTable({ schema }) {
     };
     fetchTableData();
   }, [schema, moduleName, refreshTrigger]);
-    // const getMockData = () => {
-    //   switch (moduleName) {
-    //     case 'USERS':
-    //       return [
-    //         { id: 1, username: 'admin', userCode: 'admin', email: 'admin@gmail.com', password: '1', departmentId: '1', groupIds: 'USER, ADMIN' },
-    //         { id: 2, username: 'user', userCode: 'user', email: 'user@gmail.com', password: '1', departmentId: '1', groupIds: 'USER' },
-    //         { id: 3, username: 'user01', userCode: 'user01', email: 'user01@gmail.com', password: '1', departmentId: '', groupIds: 'USER, ADMIN' },
-    //       ];
-    //     case 'CUSTOM FIELDS':
-    //       return [
-    //         { id: 1, label: 'Username', fieldKey: 'username' },
-    //         { id: 2, label: 'User Code', fieldKey: 'user_code' },
-    //         { id: 3, label: 'Email', fieldKey: 'email' },
-    //         { id: 4, label: 'Password', fieldKey: 'password' },
-    //       ];
-    //     case 'FORM ACTIONS':
-    //       return [
-    //         { id: 1, actionName: 'Save', actionCode: 'USER_SAVE' },
-    //         { id: 2, actionName: 'Update', actionCode: 'USER_UPDATE' },
-    //         { id: 3, actionName: 'Delete', actionCode: 'USER_DELETE' },
-    //       ];
-    //     default:
-    //       return [
-    //         { id: 1, groupName: 'USER', groupCode: 'USER' },
-    //         { id: 2, groupName: 'ADMIN', groupCode: 'ADMIN' },
-    //       ];
-    //   }
-    // };
-  //   setTableData(getMockData());
-  // }, [moduleName, schema]);
 
   if (!schema) return <div>Không tìm thấy cấu hình trang!</div>;
 
@@ -118,32 +98,50 @@ export default function DynamicTable({ schema }) {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa dữ liệu này không?')) {
-      try {
-        await dynamicApi.delete(moduleName, id);
-        setTableData(prev => prev.filter(row => row.id !== id));
-        alert('Xóa thành công!');
-      } catch (error) {
-        alert(error.message);
+    setConfirmBox({
+      isOpen: true,
+      title: 'Delete Confirmation',
+      message: 'Are you sure you want to delete this record? This action cannot be undone.',
+      action: async () => {
+        setConfirmBox(prev => ({ ...prev, isOpen: false }));
+        try {
+          await dynamicApi.delete(endpoint, id);
+          showToast('Record deleted successfully', 'success');
+          setRefreshTrigger(prev => prev + 1);
+        } catch (err) {
+          showToast('Connection error', 'error');
+        }
       }
-    }
+    });
   };
+
+  // const handleDelete = async (id) => {
+  //   if (window.confirm('Are you sure you want to delete this record?')) {
+  //     try {
+  //       await dynamicApi.delete(moduleName, id);
+  //       setTableData(prev => prev.filter(row => row.id !== id));
+  //       alert('Deleted successfully!');
+  //     } catch (error) {
+  //       alert(error.message);
+  //     }
+  //   }
+  // };
 
   const handleSave = async (formData) => {
     try {
+      //const endpoint = schema.endpoint || moduleName.toLowerCase().replace(' ', '-'); 
       if (selectedRow) {
-        const updatedData = await dynamicApi.update(moduleName, selectedRow.id, formData);
-        setTableData(prev => prev.map(row => row.id === selectedRow.id ? updatedData : row));
-        alert('Cập nhật thành công!');
+        const recordId = selectedRow.id || selectedRow.user_code || selectedRow.group_code;
+        await dynamicApi.update(endpoint, recordId, formData);
+        showToast('Record updated successfully', 'success');
       } else {
-        const newData = await dynamicApi.create(moduleName, formData);
-        setTableData(prev => [...prev, newData]);
-        alert('Thêm mới thành công!');
+        await dynamicApi.create(endpoint, formData);
+        showToast('New record created successfully', 'success');
       }
       setIsModalOpen(false);
-      setRefreshTrigger(prev => prev + 1)
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
-      alert(error.message);
+      showToast('Connection error', 'error');
     }
   };
 
@@ -159,6 +157,46 @@ export default function DynamicTable({ schema }) {
 
   return (
     <div className="flex flex-col gap-6">
+
+      {/* TOAST NOTIFICATION */}
+      {toast.isOpen && (
+        <div className={`fixed top-6 right-6 z-[70] px-5 py-3 rounded shadow-lg text-white font-medium flex items-center gap-3 transition-all duration-300 ${
+          toast.type === 'success' ? 'bg-[#00b074]' : 'bg-red-500'
+        }`}>
+          {toast.type === 'success' ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          )}
+          {toast.message}
+        </div>
+      )}
+
+      {/* CONFIRM BÕ */}
+      {confirmBox.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{confirmBox.title}</h3>
+              <p className="text-sm text-gray-600">{confirmBox.message}</p>
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <button 
+                onClick={() => setConfirmBox(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmBox.action}
+                className="px-4 py-2 text-sm font-medium text-white bg-xanh-nhat hover:bg-xanh-dam rounded shadow-sm transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* TABS MENU */}
       {pageTabs && pageTabs.length > 0 && (
@@ -269,14 +307,14 @@ export default function DynamicTable({ schema }) {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Đang tải dữ liệu...
+                      Loading data...
                     </div>
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
                   <td colSpan={displayFields.length + 1} className="py-8 text-center text-red-500 font-medium">
-                    Lỗi: {error}
+                    Error: {error}
                   </td>
                 </tr>
               ) : processedData.length > 0 ? (
@@ -302,15 +340,15 @@ export default function DynamicTable({ schema }) {
                         {actions?.canEdit && (
                           <button 
                             onClick={() => handleOpenEdit(row)} 
-                            className="w-7 h-7 rounded-full border border-green-400 text-green-500 flex items-center justify-center hover:bg-green-50 transition-colors"
+                            className="w-7 h-7 rounded-full border border-gray-400 text-green-500 flex items-center justify-center hover:bg-green-50 transition-colors"
                           >
-                            ✎
+                            {/*✎*/}✏️ 
                           </button>
                         )}
                         {actions?.canDelete && (
                           <button 
                             onClick={() => handleDelete(row.id)} 
-                            className="w-7 h-7 rounded-full border border-red-400 text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors"
+                            className="w-7 h-7 rounded-full border border-gray-400 text-red-500 flex items-center justify-center hover:bg-red-50 transition-colors"
                           >
                             🗑
                           </button>
@@ -322,7 +360,7 @@ export default function DynamicTable({ schema }) {
               ) : (
                 <tr>
                   <td colSpan={displayFields.length + 1} className="py-8 text-center text-gray-400">
-                    Không tìm thấy dữ liệu phù hợp.
+                    No results found.
                   </td>
                 </tr>
               )}
