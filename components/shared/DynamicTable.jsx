@@ -12,39 +12,63 @@ export default function DynamicTable({ schema }) {
   const [tableData, setTableData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const { moduleName, actions, fields, listConfig, pageTabs } = schema || {};
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!schema) return;
-    const getMockData = () => {
-      switch (moduleName) {
-        case 'USERS':
-          return [
-            { id: 1, username: 'admin', userCode: 'admin', email: 'admin@gmail.com', password: '1', departmentId: '1', groupIds: 'USER, ADMIN' },
-            { id: 2, username: 'user', userCode: 'user', email: 'user@gmail.com', password: '1', departmentId: '1', groupIds: 'USER' },
-            { id: 3, username: 'user01', userCode: 'user01', email: 'user01@gmail.com', password: '1', departmentId: '', groupIds: 'USER, ADMIN' },
-          ];
-        case 'CUSTOM FIELDS':
-          return [
-            { id: 1, label: 'Username', fieldKey: 'username' },
-            { id: 2, label: 'User Code', fieldKey: 'user_code' },
-            { id: 3, label: 'Email', fieldKey: 'email' },
-            { id: 4, label: 'Password', fieldKey: 'password' },
-          ];
-        case 'FORM ACTIONS':
-          return [
-            { id: 1, actionName: 'Save', actionCode: 'USER_SAVE' },
-            { id: 2, actionName: 'Update', actionCode: 'USER_UPDATE' },
-            { id: 3, actionName: 'Delete', actionCode: 'USER_DELETE' },
-          ];
-        default:
-          return [
-            { id: 1, groupName: 'USER', groupCode: 'USER' },
-            { id: 2, groupName: 'ADMIN', groupCode: 'ADMIN' },
-          ];
+
+    const fetchTableData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const endpoint = schema.endpoint || moduleName.toLowerCase().replace(' ', '-'); 
+        console.log(`Đang gọi API lấy danh sách: /api/${endpoint}`);
+        const responseData = await dynamicApi.getAll(endpoint);
+        const actualData = responseData.data;
+        setTableData(actualData);
+        
+      } catch (err) {
+        console.error("Lỗi khi fetch dữ liệu bảng:", err);
+        setError(err.message);
+        setTableData([]); 
+      } finally {
+        setIsLoading(false);
       }
     };
-    setTableData(getMockData());
-  }, [moduleName, schema]);
+    fetchTableData();
+  }, [schema, moduleName, refreshTrigger]);
+    // const getMockData = () => {
+    //   switch (moduleName) {
+    //     case 'USERS':
+    //       return [
+    //         { id: 1, username: 'admin', userCode: 'admin', email: 'admin@gmail.com', password: '1', departmentId: '1', groupIds: 'USER, ADMIN' },
+    //         { id: 2, username: 'user', userCode: 'user', email: 'user@gmail.com', password: '1', departmentId: '1', groupIds: 'USER' },
+    //         { id: 3, username: 'user01', userCode: 'user01', email: 'user01@gmail.com', password: '1', departmentId: '', groupIds: 'USER, ADMIN' },
+    //       ];
+    //     case 'CUSTOM FIELDS':
+    //       return [
+    //         { id: 1, label: 'Username', fieldKey: 'username' },
+    //         { id: 2, label: 'User Code', fieldKey: 'user_code' },
+    //         { id: 3, label: 'Email', fieldKey: 'email' },
+    //         { id: 4, label: 'Password', fieldKey: 'password' },
+    //       ];
+    //     case 'FORM ACTIONS':
+    //       return [
+    //         { id: 1, actionName: 'Save', actionCode: 'USER_SAVE' },
+    //         { id: 2, actionName: 'Update', actionCode: 'USER_UPDATE' },
+    //         { id: 3, actionName: 'Delete', actionCode: 'USER_DELETE' },
+    //       ];
+    //     default:
+    //       return [
+    //         { id: 1, groupName: 'USER', groupCode: 'USER' },
+    //         { id: 2, groupName: 'ADMIN', groupCode: 'ADMIN' },
+    //       ];
+    //   }
+    // };
+  //   setTableData(getMockData());
+  // }, [moduleName, schema]);
 
   if (!schema) return <div>Không tìm thấy cấu hình trang!</div>;
 
@@ -117,6 +141,7 @@ export default function DynamicTable({ schema }) {
         alert('Thêm mới thành công!');
       }
       setIsModalOpen(false);
+      setRefreshTrigger(prev => prev + 1)
     } catch (error) {
       alert(error.message);
     }
@@ -236,9 +261,27 @@ export default function DynamicTable({ schema }) {
             </thead>
 
             <tbody>
-              {processedData.length > 0 ? (
-                processedData.map((row) => (
-                  <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={displayFields.length + 1} className="py-8 text-center text-gray-500 font-medium">
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-[#00b074]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Đang tải dữ liệu...
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={displayFields.length + 1} className="py-8 text-center text-red-500 font-medium">
+                    Lỗi: {error}
+                  </td>
+                </tr>
+              ) : processedData.length > 0 ? (
+                processedData.map((row, index) => (
+                  <tr key={row[schema.primaryKey || 'id']} className="border-b border-gray-100 hover:bg-gray-50">
                     {displayFields.map((field) => (
                       <td key={`${row.id}-${field.name}`} className="py-4 pr-4">
                         {field.name === 'groupIds' && row[field.name] ? (

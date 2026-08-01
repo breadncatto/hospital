@@ -1,14 +1,13 @@
 import mockData from '../../../mock/db.json';
 import DynamicTable from '../../../components/shared/DynamicTable';
+import { dynamicApi } from '../../../api/api';
 
 export default async function ModulePage({ params }) {
-  const resolvedParams = await params;
-  const moduleName = resolvedParams.module; 
-
-  let schemaPath = null;
-  
+  const moduleName = (await params).module; 
+  let schemaPath = null; 
   mockData.menuGroups.forEach((group) => {
     const foundMenu = group.menus.find((menu) => menu.path === `/${moduleName}`);
+    console.log(moduleName);
     if (foundMenu) {
       schemaPath = foundMenu.schemaPath;
     }
@@ -19,6 +18,8 @@ export default async function ModulePage({ params }) {
     'user-accounts': '/api/schema/users',
     'user-groups': '/api/schema/groups'
   };
+
+  console.log(`Module name: ${moduleName}`);
 
   if (!schemaPath && subTabMapping[moduleName]) {
     schemaPath = subTabMapping[moduleName];
@@ -35,6 +36,8 @@ export default async function ModulePage({ params }) {
       </div>
     );
   }
+
+    console.log(`Current schema: ${currentSchema}`);
 
   return (
     <div className="w-full">
