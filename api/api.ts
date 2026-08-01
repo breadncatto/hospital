@@ -1,4 +1,4 @@
-const BASE_URL = 'http://10.36.22.112:81/api';
+const BASE_URL = 'http://10.36.22.72:81/api';
 
 export const authApi = {
   login: async (username: string, password: string) => {
@@ -12,12 +12,12 @@ export const authApi = {
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Đăng nhập thất bại!');
+        throw new Error(errorData?.message || 'Login failed!');
       }
       return response;
       
     } catch (error) {
-      console.error('Lỗi khi gọi API login:', error);
+      console.error('Connection error:', error);
       throw error; 
     }
   }
@@ -32,58 +32,63 @@ const getAuthHeaders = () => {
 };
 
 export const dynamicApi = {
-  getAll: async (moduleName: string) => {
-    console.log(moduleName);
-    const res = await fetch(`${BASE_URL}/${moduleName}`);
-    if (!res.ok) throw new Error('Lỗi tải dữ liệu');
-    console.log(res)
+  getAll: async (endpoint: string) => {
+    const res = await fetch(`${BASE_URL}/${endpoint}`);
+    if (!res.ok){
+      return {data: [], error: "Connection error!"};
+    }
     return res.json();
   },
 
-  create: async (moduleName: string, data: Record<string, any>) => {
-    moduleName = moduleName.toLowerCase();
-    console.log(JSON.stringify(data))
-    const res = await fetch(`${BASE_URL}/${moduleName}`, {
+  create: async (endpoint: string, data: Record<string, any>) => {
+    const res = await fetch(`${BASE_URL}/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-      //body: data as any,
-    });
-    console.log(`Data: ${JSON.stringify(data)}`)
-    if (!res.ok) throw new Error('Thêm mới thất bại');
-    console.log(`Data: ${res.json}`)
-    return res.json();
+      });
+    console.log(`ok`);
+    if (res.ok!){
+      return {data: [], error: "Connection error!"}
+    }
+    return data;
   },
 
-  update: async (moduleName: string, id: string | number, data: Record<string, any>) => {
-    const res = await fetch(`${BASE_URL}/${moduleName}/${id}`, {
+  update: async (endpoint: string, id: string | number, data: Record<string, any>) => {
+    const res = await fetch(`${BASE_URL}/${endpoint}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Cập nhật thất bại');
+    if (res.ok!)return {data: [], error: "Connection error!"}
     return res.json();
   },
 
-  delete: async (moduleName: string, id: string | number) => {
-    const res = await fetch(`${BASE_URL}/${moduleName}/${id}`, {
+  delete: async (endpoint: string, id: string | number) => {
+    const res = await fetch(`${BASE_URL}/${endpoint}/${id}`, {
       method: 'DELETE',
     });
-    if (!res.ok) throw new Error('Xóa thất bại');
+    if (res.ok!)return {data: [], error: "Connection error!"}
     return true;
   }
 };
 
 export const systemApi = {
-  getMenus: async () => {
-    const res = await fetch(`${BASE_URL}/menus`, {
-      method: 'GET',
-     // headers: getAuthHeaders(), 
-    });
-    
-    if (!res.ok) {
-      throw new Error('Lỗi tải danh sách menu');
+  getMenus: async (userId: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/User/userId=${userId}/menus`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+      
+      if (!res.ok) {
+        return { error: 'Connection error', data: [] }; 
+      }
+      
+      const responseData = await res.json();
+      return { error: null, data: responseData };
+    } catch (err) {
+      console.error('Fetch error:', err);
+      return { error: 'Connection error', data: [] };
     }
-    return res.json();
   }
 };
