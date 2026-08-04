@@ -29,9 +29,9 @@ export default async function ModulePage({ params }) {
   if (!currentSchema) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-3">
-        <div className="text-xl">Tính năng này chưa có cấu hình hoặc bạn không có quyền truy cập.</div>
+        <div className="text-xl">This feature is not configured or you do not have permission to access it.</div>
         <div className="text-sm bg-gray-100 px-4 py-2 rounded">
-          <b>Debug URL đang tìm:</b> /{moduleName}
+          {/*<b>Debug URL đang tìm:</b> /{moduleName}*/}
         </div>
       </div>
     );
