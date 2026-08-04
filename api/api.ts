@@ -1,24 +1,25 @@
-const BASE_URL = 'http://10.36.22.72:81/api';
+const BASE_URL = 'http://10.36.22.65:81/api';
 
 export const authApi = {
-  login: async (username: string, password: string) => {
+  login: async (credentials: any) => {
     try {
-      const response = await fetch(`${BASE_URL}/Auth/login`, {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(credentials),
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Login failed!');
+
+      if (!res.ok) {
+        return { error: 'Invalid username or password', data: null };
       }
-      return response;
-      
-    } catch (error) {
-      console.error('Connection error:', error);
-      throw error; 
+
+      const responseData = await res.json();
+      return { error: null, data: responseData };
+    } catch (err) {
+      console.error('Login error:', err);
+      return { error: 'Connection error', data: null };
     }
   }
 };
