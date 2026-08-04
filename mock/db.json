@@ -108,10 +108,14 @@
         { "name": "password", "label": "Password", "type": "password", "isSearchable": true },
         { "name": "department", "label": "Department", "type": "select", "isSearchable": true },
         { "name": "group_ids", "label": "User Groups", "type": "multiselect", "isSearchable": true },
-        { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": false }
+        { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": false },
+        { "name": "created", "label": "Created By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeCreated", "label": "Time Created", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false },
+        { "name": "updated", "label": "Updated By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeUpdated", "label": "Time Updated", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["username", "user_code", "email", "password", "department", "group_ids"]
+        "displayColumns": ["username", "user_code", "email", "password", "department", "group_ids", "created", "timeCreated", "updated", "timeUpdated"]
       },
       "formConfig": {
         "layout": [
@@ -134,10 +138,11 @@
       ],
       "fields": [
         { "name": "label", "label": "Label", "type": "text", "isSearchable": true },
-        { "name": "fieldKey", "label": "Field Key", "type": "text", "isSearchable": true }
+        { "name": "fieldKey", "label": "Field Key", "type": "text", "isSearchable": true },
+        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true}
       ],
       "listConfig": {
-        "displayColumns": ["label", "fieldKey"]
+        "displayColumns": ["label", "fieldKey", "menu"]
       },
       "formConfig": { 
         "layout": [
@@ -159,10 +164,11 @@
       ],
       "fields": [
         { "name": "action_name", "label": "Action Name", "type": "text", "isSearchable": true },
-        { "name": "action_code", "label": "Action Code", "type": "text", "isSearchable": true }
+        { "name": "action_code", "label": "Action Code", "type": "text", "isSearchable": true },
+        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true }
       ],
       "listConfig": {
-        "displayColumns": ["action_name", "action_code"]
+        "displayColumns": ["action_name", "action_code", "menu"]
       },
       "formConfig": { 
         "layout": [
@@ -195,7 +201,7 @@
         "layout": [
           {
             "type": "flat",
-            "fields": ["group_name", "group_code"]
+            "fields": ["group_name", "group_code", "permissions"]
           }
         ]
       }
