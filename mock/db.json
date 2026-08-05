@@ -102,11 +102,11 @@
         { "title": "Form Actions", "path": "/form-actions", "isActive": false }
       ],
       "fields": [
-        { "name": "username", "label": "Username", "type": "text", "isSearchable": true },
-        { "name": "user_code", "label": "User Code", "type": "text", "isSearchable": true },
-        { "name": "email", "label": "Email", "type": "email", "isSearchable": true },
-        { "name": "password", "label": "Password", "type": "password", "isSearchable": true },
-        { "name": "department", "label": "Department", "type": "select", "isSearchable": true },
+        { "name": "Username", "label": "Username", "type": "text", "isSearchable": true },
+        { "name": "User_Code", "label": "User Code", "type": "text", "isSearchable": true },
+        { "name": "Email", "label": "Email", "type": "email", "isSearchable": true },
+        { "name": "Password", "label": "Password", "type": "password", "isSearchable": true },
+        { "name": "Department", "label": "Department", "type": "select", "isSearchable": true },
         { "name": "group_ids", "label": "User Groups", "type": "multiselect", "isSearchable": true },
         { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": false },
         { "name": "created", "label": "Created By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
@@ -115,13 +115,13 @@
         { "name": "timeUpdated", "label": "Time Updated", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["username", "user_code", "email", "password", "department", "group_ids", "created", "timeCreated", "updated", "timeUpdated"]
+        "displayColumns": ["Username", "User_Code", "Email", "Password", "Department", "group_ids", "created", "timeCreated", "updated", "timeUpdated"]
       },
       "formConfig": {
         "layout": [
           {
             "type": "flat",
-            "fields": ["username", "user_code", "email", "password", "department", "group_ids", "permissions"]
+            "fields": ["Username", "User_Code", "Email", "Password", "Department", "group_ids", "permissions"]
           }
         ]
       }
@@ -129,6 +129,7 @@
 
     "/api/schema/custom-fields": {
       "moduleName": "CUSTOMFIELD",
+      "primaryKey": "fieldKey",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": false },
@@ -139,22 +140,27 @@
       "fields": [
         { "name": "label", "label": "Label", "type": "text", "isSearchable": true },
         { "name": "fieldKey", "label": "Field Key", "type": "text", "isSearchable": true },
-        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true}
+        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true},
+        { "name": "created", "label": "Created By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeCreated", "label": "Time Created", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false },
+        { "name": "updated", "label": "Updated By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeUpdated", "label": "Time Updated", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["label", "fieldKey", "menu"]
+        "displayColumns": ["label", "fieldKey", "menu", "created", "timeCreated", "updated", "timeUpdated"]
       },
       "formConfig": { 
         "layout": [
           {
             "type": "flat",
-            "fields": ["label", "fieldKey"]
+            "fields": ["label", "fieldKey", "menu"]
           }
         ] }
     },
 
     "/api/schema/form-actions": {
       "moduleName": "ACTION",
+      "primaryKey": "action_code",
       "actions": { "canCreate": true, "canEdit": true, "canDelete": true },
       "pageTabs": [
         { "title": "Users", "path": "/user-accounts", "isActive": false },
@@ -165,16 +171,20 @@
       "fields": [
         { "name": "action_name", "label": "Action Name", "type": "text", "isSearchable": true },
         { "name": "action_code", "label": "Action Code", "type": "text", "isSearchable": true },
-        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true }
+        { "name": "menu", "label": "Menu", "type": "text", "isSearchable": true },
+        { "name": "created", "label": "Created By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeCreated", "label": "Time Created", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false },
+        { "name": "updated", "label": "Updated By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeUpdated", "label": "Time Updated", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["action_name", "action_code", "menu"]
+        "displayColumns": ["action_name", "action_code", "menu", "created", "timeCreated", "updated", "timeUpdated"]
       },
       "formConfig": { 
         "layout": [
           {
             "type": "flat",
-            "fields": ["action_name", "action_code"]
+            "fields": ["action_name", "action_code", "menu"]
           }
         ] }
     },
@@ -190,18 +200,22 @@
         { "title": "Form Actions", "path": "/form-actions", "isActive": false }
       ],
       "fields": [
-        { "name": "group_name", "label": "Group Name", "type": "text", "isSearchable": true },
-        { "name": "group_code", "label": "Group Code", "type": "text", "isSearchable": true },
-        { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": true }
+        { "name": "group_Name", "label": "Group Name", "type": "text", "isSearchable": true },
+        { "name": "group_Code", "label": "Group Code", "type": "text", "isSearchable": true },
+        { "name": "permissions", "label": "Permissions", "type": "tree_checkbox", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "created", "label": "Created By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeCreated", "label": "Time Created", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false },
+        { "name": "updated", "label": "Updated By", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": true },
+        { "name": "timeUpdated", "label": "Time Updated", "type": "text", "dataSource": "/api/permissions/tree", "isSearchable": false }
       ],
       "listConfig": {
-        "displayColumns": ["group_name", "group_code"]
+        "displayColumns": ["group_Name", "group_Code", "created", "timeCreated", "updated", "timeUpdated"]
       },
       "formConfig": {
         "layout": [
           {
             "type": "flat",
-            "fields": ["group_name", "group_code", "permissions"]
+            "fields": ["group_Name", "group_Code", "permissions"]
           }
         ]
       }
