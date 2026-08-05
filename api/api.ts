@@ -34,11 +34,14 @@ const getAuthHeaders = () => {
 
 export const dynamicApi = {
   getAll: async (endpoint: string) => {
-    const res = await fetch(`${BASE_URL}/${endpoint}`);
-    if (!res.ok){
-      return {data: [], error: "Connection error!"};
+    try {
+      const res = await fetch(`${BASE_URL}/${endpoint}`);
+      if (!res.ok) {
+        return { data: [], error: "Connection error!" };}
+      return res.json();
+    } catch (err) {
+      return { data: [], error: "Failed to fetch" };
     }
-    return res.json();
   },
 
   create: async (endpoint: string, data: Record<string, any>) => {

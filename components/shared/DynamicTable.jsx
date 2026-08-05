@@ -36,13 +36,16 @@ export default function DynamicTable({ schema }) {
       try {
         console.log(`Đang gọi API lấy danh sách: /api/${endpoint}`);
         const responseData = await dynamicApi.getAll(endpoint);
-        const actualData = responseData.data;
+        if (responseData && responseData.error) {
+          throw new Error(responseData.error);
+        }
+        const actualData = responseData.data || responseData || [];
         setTableData(actualData);
         
       } catch (err) {
         console.error("Lỗi khi fetch dữ liệu bảng:", err);
         setError(err.message);
-        setTableData([]); 
+        setTableData([]);
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +53,7 @@ export default function DynamicTable({ schema }) {
     fetchTableData();
   }, [schema, moduleName, refreshTrigger]);
 
-  if (!schema) return <div>Không tìm thấy cấu hình trang!</div>;
+  if (!schema) return <div>Page configuration not found!</div>;
 
   const displayFields = fields.filter(field => 
     listConfig.displayColumns.includes(field.name)
@@ -313,8 +316,15 @@ export default function DynamicTable({ schema }) {
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={displayFields.length + 1} className="py-8 text-center text-red-500 font-medium">
-                    Error: {error}
+                  <td 
+                    colSpan={displayFields.length + 1} 
+                    className={`py-8 text-center font-medium ${
+                      error.includes('Failed to fetch') || error.includes('Connection error')
+                        ? 'text-gray-400'
+                        : 'text-red-500'  
+                    }`}
+                  >
+                    {error.includes('Failed to fetch') ? 'Connection Error: Failed to fetch' : `Error: ${error}`}
                   </td>
                 </tr>
               ) : processedData.length > 0 ? (
