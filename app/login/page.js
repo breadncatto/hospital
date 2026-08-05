@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Cuprum } from 'next/font/google';
 import { authApi } from '../../api/api'; 
+import { Eye, EyeOff } from 'lucide-react';
 
 const cuprum = Cuprum({ subsets: ['latin'], weight: ['400', '700'] });
 
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); 
 
   useEffect(() => {
     localStorage.removeItem('token');
@@ -30,7 +32,6 @@ export default function LoginPage() {
     setError(null);
 
     const response = await authApi.login(formData);
-
     if (response.error) {
       setError(response.error);
       setIsLoading(false);
@@ -95,13 +96,20 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"} 
                   name="password"         
                   value={formData.password} 
                   onChange={handleChange}   
-                  className="h-[60px] w-full rounded-[5px] bg-white pl-12 pr-4 text-xl text-black shadow-md outline-none focus:ring-2 focus:ring-blue-400"
+                  className="h-[60px] w-full rounded-[5px] bg-white pl-12 pr-12 text-xl text-black shadow-md outline-none focus:ring-2 focus:ring-blue-400"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                </button>
               </div>
             </div>
 
@@ -116,7 +124,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="mt-2 h-[60px] w-full rounded-[5px] bg-[#4780E3] text-2xl font-normal text-white shadow-md transition-colors hover:bg-[#3466bd] disabled:opacity-50"
             >
-              {isLoading ? 'Đang tải...' : 'Đăng nhập'}
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
@@ -133,8 +141,7 @@ export default function LoginPage() {
       <div 
         className="hidden md:block md:w-[70%] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/image 2.png')" }} 
-      />
-      
+      /> 
     </div>
   );
 }

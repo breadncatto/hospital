@@ -1,18 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Icons } from '../../utils/icon.js'
+import { Icons } from '../../utils/icon.js';
+import { Eye, EyeOff } from 'lucide-react'; 
 
 export default function DynamicForm({ schema, initialData, onClose, onSave }) {
   const [formData, setFormData] = useState(initialData || {});
+  const [showPassword, setShowPassword] = useState({}); 
   const { moduleName, fields, formConfig } = schema;
+
   const getFieldDef = (fieldName) => fields.find((f) => f.name === fieldName);
+  
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
   };
+
+  const togglePasswordVisibility = (fieldName) => {
+    setShowPassword(prev => ({
+      ...prev,
+      [fieldName]: !prev[fieldName]
+    }));
+  };
+
   const handleSubmit = () => {
     onSave(formData);
   };
@@ -48,6 +60,7 @@ export default function DynamicForm({ schema, initialData, onClose, onSave }) {
                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                           {field.label}
                         </label>
+                        
                         {(field.type === 'text' || field.type === 'email') && (
                           <input 
                             type={field.type} 
@@ -56,22 +69,25 @@ export default function DynamicForm({ schema, initialData, onClose, onSave }) {
                             className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors text-gray-500 font-medium"
                           />
                         )}
+                        
                         {field.type === 'password' && (
-                          <div className="relative">
+                          <div className="relative flex items-center">
                             <input 
-                              type="password" 
+                              type={showPassword[field.name] ? "text" : "password"} 
                               value={formData[field.name] || ''}
                               onChange={(e) => handleChange(field.name, e.target.value)}
-                              className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-[#00b074] transition-colors pr-10 text-gray-500 font-medium"
+                              className="w-full border border-gray-300 rounded px-3 py-2 pr-10 outline-none focus:border-[#00b074] transition-colors text-gray-500 font-medium"
                             />
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-400 hover:text-gray-600">
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                              </svg>
-                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => togglePasswordVisibility(field.name)}
+                              className="absolute right-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                              {showPassword[field.name] ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                           </div>
                         )}
+                        
                         {(field.type === 'select' || field.type === 'multiselect') && (
                           <div className="relative">
                             <select 
@@ -90,11 +106,16 @@ export default function DynamicForm({ schema, initialData, onClose, onSave }) {
                             </div>
                           </div>
                         )}
+                        
                         {field.type === 'tree_checkbox' && (
                           <div className="w-full border border-gray-200 rounded p-5 bg-white max-h-[300px] overflow-y-auto shadow-inner text-gray-500 font-medium">
-                             <PermissionsTree />
+                             <PermissionsTree 
+                               value={formData[field.name] || []} 
+                               onChange={(newValue) => handleChange(field.name, newValue)}
+                             />
                           </div>
                         )}
+                        
                       </div>
                     );
                   })}
@@ -165,11 +186,78 @@ const treeData = [
   }
 ];
 
+const getDescendantIds = (node) => {
+  let ids = [];
+  if (node.children && node.children.length > 0) {
+    node.children.forEach(child => {
+      ids.push(child.id);
+      ids = ids.concat(getDescendantIds(child));
+    });
+  }
+  return ids;
+};
 
+const findNodeById = (nodes, targetId) => {
+  for (let node of nodes) {
+    if (node.id === targetId) return node;
+    if (node.children) {
+      const found = findNodeById(node.children, targetId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
 
-function TreeNode({ node, level = 0 }) {
+function PermissionsTree({ value = [], onChange }) {
+  
+  const handleCheck = (node, isChecked, ancestorIds) => {
+    let newSet = new Set(value);
+    
+    if (isChecked) {
+      newSet.add(node.id);
+      getDescendantIds(node).forEach(id => newSet.add(id));
+      ancestorIds.forEach(id => newSet.add(id));
+    } else {
+      newSet.delete(node.id);
+      getDescendantIds(node).forEach(id => newSet.delete(id));
+      const reversedAncestors = [...ancestorIds].reverse();
+      for (let ancestorId of reversedAncestors) {
+        const ancestorNode = findNodeById(treeData, ancestorId);
+        if (ancestorNode && ancestorNode.children) {
+          const hasCheckedChild = ancestorNode.children.some(child => newSet.has(child.id));
+          
+          if (!hasCheckedChild) {
+            newSet.delete(ancestorId);
+          } else {
+            break; 
+          }
+        }
+      }
+    }
+    
+    onChange(Array.from(newSet));
+  };
+
+  return (
+    <div className="flex flex-col">
+      {treeData.map(rootNode => (
+        <TreeNode 
+          key={rootNode.id} 
+          node={rootNode} 
+          level={0} 
+          ancestors={[]} 
+          checkedIds={value} 
+          onCheck={handleCheck} 
+        />
+      ))}
+    </div>
+  );
+}
+
+function TreeNode({ node, level = 0, ancestors = [], checkedIds = [], onCheck }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = node.children && node.children.length > 0;
+  const isChecked = checkedIds.includes(node.id);
 
   return (
     <div className="flex flex-col">
@@ -190,29 +278,32 @@ function TreeNode({ node, level = 0 }) {
             </svg>
           )}
         </div>
-        <input type="checkbox" className="w-4 h-4 mr-3 rounded border-gray-300 text-[#00b074] focus:ring-[#00b074] cursor-pointer" />
+        <input 
+          type="checkbox" 
+          checked={isChecked}
+          onChange={(e) => onCheck(node, e.target.checked, ancestors)}
+          className="w-4 h-4 mr-3 rounded border-gray-300 text-[#00b074] focus:ring-[#00b074] cursor-pointer" 
+        />
         <div className="flex items-center gap-2 text-sm text-gray-700 select-none">
           {node.icon && Icons[node.icon]}
           <span>{node.label}</span>
         </div>
       </div>
+      
       {isExpanded && hasChildren && (
         <div className="flex flex-col">
           {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} level={level + 1} />
+            <TreeNode 
+              key={child.id} 
+              node={child} 
+              level={level + 1} 
+              ancestors={[...ancestors, node.id]} 
+              checkedIds={checkedIds}
+              onCheck={onCheck}
+            />
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function PermissionsTree() {
-  return (
-    <div className="flex flex-col">
-      {treeData.map(rootNode => (
-        <TreeNode key={rootNode.id} node={rootNode} level={0} />
-      ))}
     </div>
   );
 }
